@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create QR-code</title>
+    <style>
+        .block{
+            font-size: 20px;
+            text-align: left;
+            display: inline-block;
+        }
+        .inputBlock{
+            margin-left: 5%;
+            display: inline-block;
+        }
+        input[type=text]{
+            font-size: 18px;
+            height: 21px;
+        }
+        input[type=submit]{
+            height: 50px;
+            width: 100px;
+        }
+    </style>
+    <script th:inline="javascript">
+
+        function create(){
+            var data = JSON.stringify({
+                'clientName': document.getElementById("clientName").value,
+                'subdivision': document.getElementById("subdivision").value,
+                'brand' : document.getElementById("brand").value,
+                'typeCartridgeId' : document.getElementById("typeCartridgeId").value,
+                'cartridgeId' : document.getElementById("cartridgeId").value
+            });
+
+            console.log(data)
+
+            var req = new XMLHttpRequest();
+            var s = ""
+            // req.onreadystatechange = function () {
+            //
+            //
+            //     if (this.readyState == 4 && this.status == 200) {
+            //
+            //     }
+            // };
+
+            if(document.getElementById("clientName").value == "" ||
+                document.getElementById("clientName").value == null){
+                s += " имя клиента"
+            }
+            if(document.getElementById("subdivision").value == "" ||
+                document.getElementById("subdivision").value == null){
+                s += " подразделение"
+            }
+            if(document.getElementById("brand").value == "" ||
+                document.getElementById("brand").value == null){
+                s += " брэнд"
+            }
+            if(document.getElementById("typeCartridgeId").value == "" ||
+                document.getElementById("typeCartridgeId").value == null){
+                s += " тип картриджа айди"
+            }
+            if(document.getElementById("cartridgeId").value == "" ||
+                document.getElementById("cartridgeId").value == null){
+                s += " картридж айди"
+            }
+            if(s.length > 0){
+                alert("Не заполнены следующие поля: " + s)
+            }
+            else {
+                alert("QR-коды созданы!")
+                req.open("POST", "/CartridgeServer_war_exploded/createQrCodes", true);
+                req.send(data);
+            }
+        }
+
+    </script>
+</head>
+<body>
+<center><h1>Форма для создания QR - кодов</h1></center>
+<br><br>
+<center>
+<div class="block">
+    <p>
+        <label>Имя клиента:</label>
+    </p>
+    <p>
+        <label>Подразделение:</label>
+    </p>
+    <p>
+        <label>Брэнд:</label>
+    </p>
+    <p>
+        <label>Тип картриджа айди:</label>
+    </p>
+    <p>
+        <label>Картридж айди:</label>
+    </p>
+</div>
+<div class="inputBlock">
+    <p><input type="text" name="clientName" id="clientName"></p>
+    <p><input type="text" name="subdivision" id="subdivision"></p>
+    <p><input type="text" name="brand" id="brand"></p>
+    <p><input type="text" name="typeCartridgeId" id="typeCartridgeId"></p>
+    <p><input type="text" name="cartridgeId" id="cartridgeId"></p>
+</div>
+    <br><br>
+    <p><input type="submit" name="createQrCode" id="createQrCode" value="Создать" onclick="create()"></p>
+</center>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:form="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Information</title>
+    <style type="text/css">
+        table{
+            border-collapse: collapse;
+        }
+        pre {
+            margin-bottom: 0;
+            margin-top: 0;
+        }
+        td, td, th{
+            padding: 0px;
+            height: 0px;
+        }
+        .block{
+            float: left;
+            width: 50%;
+            height: 50%;
+        }
+        .btnFind{
+            background: burlywood;
+            height: 40px;
+            width: 100px;
+        }
+        .btnPull{
+            background: antiquewhite;
+            height: 40px;
+            width: 100px;
+        }
+    </style>
+    <script th:inline="javascript">
+
+        function enableFind(){
+            document.getElementById("find").disabled = false
+        }
+
+        function ajax(){
+            var data = JSON.stringify({
+                'dateFrom': document.getElementById("dateFrom").value,
+                'dateTo': document.getElementById("dateTo").value,
+                'client' : document.getElementById("select1").value,
+                'subdivision' : document.getElementById("select2").value
+            });
+
+            var req = new XMLHttpRequest();
+
+            req.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var infos = JSON.parse(req.response)
+                    var table = document.getElementById("table")
+
+                    if(document.getElementById("select1").value == '*'){
+                        alert("Клиент не выбран!")
+                    }
+                    else {
+                        while (table.rows.length > 0) {
+                            console.log(table.rows.length)
+                            table.deleteRow(0);
+                        }
+
+                        for (i in infos) {
+                            let r = document.createElement('tr')
+                            let d = document.createElement('td')
+                            let pre = document.createElement('pre')
+                            pre.innerHTML = infos[i].name
+                            d.appendChild(pre)
+                            r.appendChild(d)
+                            d = document.createElement('td')
+                            pre = document.createElement('pre')
+                            pre.innerHTML = infos[i].count
+                            d.appendChild(pre)
+                            r.appendChild(d)
+                            table.appendChild(r)
+                            // r +="<tr><td>";
+                            // r += infos[i].name;
+                            // r += '</td><td>';
+                            // r += infos[i].count;
+                            // r += '</td><tr>';
+                        }
+                        document.getElementById("find").disabled = true
+                        if (infos.length == 0) {
+                            alert("Данных не найдено!")
+                            document.getElementById("btn").disabled = true
+                        } else {
+                            document.getElementById("btn").disabled = false
+                            document.getElementById("getQrCode").disabled = false
+                        }
+                    }
+                }
+            };
+            req.open("POST", "/CartridgeServer_war_exploded/addOptions", true);
+            req.send(data);
+        }
+
+        function ajax2(){
+            var isCorrect = confirm("Выгружать данные ?")
+            var req = new XMLHttpRequest();
+
+            if(isCorrect) {
+                req.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        enableFind()
+                        var table = document.getElementById("table")
+                        alert("Данные выгружены")
+                        while (table.rows.length > 0) {
+                            console.log(table.rows.length)
+                            table.deleteRow(0);
+                        }
+                        document.getElementById("btn").disabled = true
+                    }
+                };
+                req.open("POST", "/CartridgeServer_war_exploded/setIsUpload", true);
+                req.send();
+            }
+        }
+
+        // function getQrCode(){
+        //     var isCorrect = confirm("Получить QR-code ?")
+        //     var req = new XMLHttpRequest();
+        //
+        //     if(isCorrect) {
+        //         req.onreadystatechange = function () {
+        //             if (this.readyState == 4 && this.status == 200) {
+        //                 alert("QR-codes получены!")
+        //                 document.getElementById("getQrCode").disabled = true
+        //             }
+        //         };
+        //         req.open("GET", "/CartridgeServer_war_exploded/createQrCode", true);
+        //         req.send();
+        //     }
+        // }
+
+        function setSelect() {
+            enableFind()
+            var select = document.getElementById("select1")
+            var x = document.getElementById("select2");
+            var client = select.value
+
+            var subdivisionsNames = /*[[${subdivisions}]]*/ 'default'
+
+            var length = x.options.length;
+            for (i = length - 1; i >= 0; i--) {
+                x.options[i] = null;
+            }
+
+            var option = document.createElement("option");
+            option.text = "*";
+            x.add(option);
+
+            for (var i = 0; i < subdivisionsNames.length; i++) {
+                if (subdivisionsNames[i]["client_id"] == client) {
+                    option = document.createElement("option");
+                    option.text = subdivisionsNames[i]["name"];
+                    x.add(option);
+                }
+            }
+
+
+
+        }
+    </script>
+</head>
+<body>
+<!--<form method="post" onclick="ajax()">-->
+<div class="block"> <p>Дата с:
+<input type="date" name = "dateFrom" id="dateFrom" onchange="setMinDate('dateTo', 'dateFrom')">
+Дата по:
+<input type="date" name = "dateTo" id="dateTo" onchange="setMaxDate('dateFrom', 'dateTo')"></p>
+<p>Клиенты:
+<select id="select1" name="select1" onchange="setSelect()">
+    <option>*</option>
+    <option th:each = "test:${clients}"
+    th:utext="${test.getName()}"
+    th:value="${test.getId()}"/>
+
+</select></p>
+<p>Подразделение:
+<select id="select2" name="select2" onchange="enableFind()">
+    <option/>
+</select></p>
+<!--<p>Выгружена:</p>-->
+<!--<input type="checkbox" name="isUpload">-->
+<!--</form>-->
+<p><input class="btnFind" type="submit" name="button1" id="find" value="Поиск" onclick="ajax()" disabled="true"></p>
+<p><input class="btnPull" type="submit" name="button2" id="btn" value="Выгрузить" disabled="true" onclick="ajax2()"></p>
+<form method="get" action="http://localhost:8080/CartridgeServer_war_exploded/createQrCode">
+    <p><input type="submit" name="button3" id="getQrCode" value="Получить QR-code"></p>
+</form>
+</div>
+    <div class="container"> <p>
+<table id="table" border="1">
+</table>
+</p>
+    </div>
+<script>
+    function setMinDate(changeInput, ownInput){
+        var dateInput = document.getElementById(changeInput)
+        dateInput.setAttribute('min', document.getElementById(ownInput).value)
+    }
+
+    function setMaxDate(changeInput, ownInput){
+        var dateInput = document.getElementById(changeInput)
+        dateInput.setAttribute('max', document.getElementById(ownInput).value)
+    }
+</script>
+</body>
+</html>
